@@ -9,8 +9,6 @@ import { TerminalPanel } from "@/components/editor/TerminalPanel";
 import { StatusBar } from "@/components/editor/StatusBar";
 import { ChatFloatingButton } from "@/components/editor/ChatFloatingButton";
 import { type FileTreeItem } from "@/components/editor/FileTreeItem";
-import { SaveToIPFSDialog } from "@/components/web3/SaveToIPFSDialog";
-import { type ProjectFile } from "@/lib/ipfs";
 
 const FILES: FileTreeItem[] = [
   { id: "1", name: "src", type: "folder", isOpen: true, children: [
@@ -61,7 +59,6 @@ export function Counter() {
 export default function Editor() {
   const [activeFile, setActiveFile] = useState("App.tsx");
   const [isTerminalOpen, setIsTerminalOpen] = useState(true);
-  const [isSaveToIPFSOpen, setIsSaveToIPFSOpen] = useState(false);
 
   const collaborators = [
     { src: "https://github.com/shadcn.png", fallback: "CN" },
@@ -74,14 +71,6 @@ export default function Editor() {
     { name: "index.css", isActive: false },
   ];
 
-  // Prepare files for IPFS upload
-  const projectFiles: ProjectFile[] = [
-    { path: "src/App.tsx", content: INITIAL_CODE },
-    { path: "src/index.css", content: "/* styles here */" },
-    { path: "src/main.tsx", content: "// entry point" },
-    { path: "package.json", content: JSON.stringify({ name: "my-project" }, null, 2) },
-  ];
-
   return (
     <div className="h-screen w-screen flex flex-col bg-background overflow-hidden">
       <AppHeader variant="editor">
@@ -89,7 +78,6 @@ export default function Editor() {
           projectName="my-awesome-project" 
           activeFile={activeFile}
           collaborators={collaborators}
-          onSaveToIPFS={() => setIsSaveToIPFSOpen(true)}
         />
       </AppHeader>
 
@@ -143,13 +131,6 @@ export default function Editor() {
       </div>
       
       <StatusBar />
-
-      <SaveToIPFSDialog 
-        open={isSaveToIPFSOpen}
-        onOpenChange={setIsSaveToIPFSOpen}
-        projectName="my-awesome-project"
-        files={projectFiles}
-      />
     </div>
   );
 }
