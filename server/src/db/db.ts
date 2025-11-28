@@ -7,6 +7,7 @@ const user = new Schema({
     email: {type: String, unique: true},
     name: String,
     password: String,
+    githubId: String,
     //array of projects
     projects: [{link:String}]
 });
