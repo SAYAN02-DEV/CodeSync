@@ -29,6 +29,7 @@ declare global {
   }
 }
 
+// Get Code Tree from GitHub Repository
 router.get('/codetree', userAuth, async (req: Request, res: Response) => {
   const githubId = req.query.githubId as string | undefined;
   const repo = req.query.repo as string | undefined;
@@ -65,6 +66,39 @@ router.get('/codetree', userAuth, async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+// Get Raw File Content from GitHub Repository
+router.get('/filecontent', userAuth, async (req: Request, res: Response) => {
+  const githubId = req.query.githubId as string | undefined;
+  const repo = req.query.repo as string | undefined;
+  const filePath = req.query.filePath as string | undefined;
+  const branch = (req.query.branch as string | undefined) ?? 'main';
+
+  if (!githubId || !repo || !filePath) {
+    res.status(400).json({ message: 'GitHub ID, repo, or filePath missing' });
+    return;
+  }
+
+  try {
+    const response = await axios.get<string>(
+      `https://raw.githubusercontent.com/${githubId}/${repo}/${branch}/${filePath}`,
+      { responseType: 'text' }
+    );
+
+    res.status(200).json({ content: response.data });
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const message =
+        error.response?.data?.message || 'Failed to fetch file content';
+      res.status(status).json({ message });
+      return;
+    }
+
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 
 export default router;
 
