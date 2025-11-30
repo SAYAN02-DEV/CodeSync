@@ -98,13 +98,33 @@ app.post('/session', (req: Request, res: Response) => {
 
   dockerRun.on('error', (error) => {
     console.error('docker run error', error);
+    res.status(500).json({ message: 'Failed to start container' });
+    return;
   });
 
-  const protocol = req.protocol === 'https' ? 'wss' : 'ws';
-  const hostname = req.get('host')?.split(':')[0] ?? 'localhost';
-  const wsUrl = `${protocol}://${hostname}:${WS_PORT}/term/${sessionId}`;
-
-  res.json({ sessionId, wsUrl });
+  // Wait for container to be ready
+  let retries = 10;
+  const checkContainer = () => {
+    const check = spawn('docker', ['inspect', '-f', '{{.State.Running}}', sessionId]);
+    let output = '';
+    
+    check.stdout.on('data', (data) => { output += data.toString(); });
+    
+    check.on('close', (code) => {
+      if (code === 0 && output.trim() === 'true') {
+        const protocol = req.protocol === 'https' ? 'wss' : 'ws';
+        const hostname = req.get('host')?.split(':')[0] ?? 'localhost';
+        const wsUrl = `${protocol}://${hostname}:${WS_PORT}/term/${sessionId}`;
+        res.json({ sessionId, wsUrl });
+      } else if (retries-- > 0) {
+        setTimeout(checkContainer, 300);
+      } else {
+        res.status(500).json({ message: 'Container failed to start' });
+      }
+    });
+  };
+  
+  setTimeout(checkContainer, 300);
 });
 
 // Bridge WebSocket messages to a docker exec PTY inside the sandbox.
