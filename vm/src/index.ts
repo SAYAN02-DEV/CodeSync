@@ -29,7 +29,7 @@ const restServer = http.createServer(app);
 const wsServer = http.createServer();
 
 // WebSocket server streams terminal IO for active sessions.
-const wss = new WebSocketServer({ server: wsServer, noServer: true });
+const wss = new WebSocketServer({ noServer: true });
 const sessions = new Map<string, IPty>();
 
 // Handle WebSocket upgrade manually to parse sessionId from path
@@ -110,9 +110,7 @@ app.post('/session', (req: Request, res: Response) => {
 // Bridge WebSocket messages to a docker exec PTY inside the sandbox.
 wss.on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
   const url = request.url ?? '';
-  // Extract sessionId from /term/{sessionId}
-  const parts = url.split('/').filter(Boolean);
-  const sessionId = parts[1]; // parts[0] is 'term', parts[1] is sessionId
+  const [, sessionId] = url.split('/').filter(Boolean);
 
   if (!sessionId) {
     ws.close(1008, 'Missing sessionId');
