@@ -47,7 +47,9 @@ app.put('/file', (req: Request, res: Response) => {
   fs.writeFileSync(absolutePath, content, 'utf8');
   res.json({ ok: true });
 });
-
+app.get('/test', (req: Request, res: Response) => {
+  res.json({ message: 'VM Service is running' });
+});
 // Spin up a sandbox container and return the WebSocket endpoint.
 app.post('/session', (req: Request, res: Response) => {
   const projectPath = typeof req.body?.projectPath === 'string' ? req.body.projectPath : '';
