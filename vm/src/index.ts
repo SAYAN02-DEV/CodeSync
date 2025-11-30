@@ -29,8 +29,24 @@ const restServer = http.createServer(app);
 const wsServer = http.createServer();
 
 // WebSocket server streams terminal IO for active sessions.
-const wss = new WebSocketServer({ server: wsServer, path: '/term' });
+const wss = new WebSocketServer({ server: wsServer, noServer: true });
 const sessions = new Map<string, IPty>();
+
+// Handle WebSocket upgrade manually to parse sessionId from path
+wsServer.on('upgrade', (request, socket, head) => {
+  const url = request.url ?? '';
+  
+  // Check if path starts with /term/
+  if (!url.startsWith('/term/')) {
+    socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request);
+  });
+});
 
 // Persist editor content inside the per-user workspace.
 app.put('/file', (req: Request, res: Response) => {
@@ -62,7 +78,7 @@ app.post('/session', (req: Request, res: Response) => {
   }
 
   fs.mkdirSync(hostPath, { recursive: true });
-
+// 135.235.137.1
   const sessionId = `sess-${uuidv4()}`;
 
   const runArgs = [
@@ -94,7 +110,9 @@ app.post('/session', (req: Request, res: Response) => {
 // Bridge WebSocket messages to a docker exec PTY inside the sandbox.
 wss.on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
   const url = request.url ?? '';
-  const [, sessionId] = url.split('/').filter(Boolean);
+  // Extract sessionId from /term/{sessionId}
+  const parts = url.split('/').filter(Boolean);
+  const sessionId = parts[1]; // parts[0] is 'term', parts[1] is sessionId
 
   if (!sessionId) {
     ws.close(1008, 'Missing sessionId');
