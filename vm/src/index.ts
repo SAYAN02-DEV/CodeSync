@@ -121,7 +121,6 @@ wss.on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
     name: 'xterm-color',
     cols: 80,
     rows: 24,
-    cwd: `/home/${SANDBOX_USER}/project`,
     env: { TERM: 'xterm-256color' }
   });
 
