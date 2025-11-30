@@ -137,7 +137,7 @@ wss.on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
     return;
   }
 
-  const ptyProcess = spawnPty('docker', ['exec', '-it', sessionId, '/bin/sh'], {
+  const ptyProcess = spawnPty('docker', ['exec', '-i', sessionId, '/bin/sh'], {
     name: 'xterm-color',
     cols: 80,
     rows: 24,
