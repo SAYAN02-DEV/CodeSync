@@ -78,7 +78,6 @@ app.post('/session', (req: Request, res: Response) => {
   }
 
   fs.mkdirSync(hostPath, { recursive: true });
-// 135.235.137.1
   const sessionId = `sess-${uuidv4()}`;
 
   const runArgs = [
